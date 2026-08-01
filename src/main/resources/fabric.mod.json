@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "outline",
+	"version": "${version}",
+	"name": "Outline",
+	"description": "Purple glow outlines on players — visible through walls, exactly like the vanilla glowing effect, always on.",
+	"authors": [
+		"ChipiLoopi9"
+	],
+	"contact": {
+		"sources": "https://github.com/ChipiLoopi9/Outline",
+		"issues": "https://github.com/ChipiLoopi9/Outline/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/outline/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.chipiloopi.outline.OutlineClient"
+		]
+	},
+	"mixins": [
+		"outline.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.18.0",
+		"fabric-api": "*",
+		"minecraft": "~1.21.11",
+		"java": ">=21"
+	}
+}
