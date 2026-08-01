@@ -1,0 +1,109 @@
+{
+    "targets": {
+        "sharp": {},
+        "core_tmp": {},
+        "core": {},
+        "glow_h": {},
+        "glow_v": {}
+    },
+    "passes": [
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "minecraft:post/entity_sobel",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "minecraft:entity_outline"
+                }
+            ],
+            "output": "sharp"
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "minecraft:post/entity_outline_box_blur",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "sharp",
+                    "bilinear": true
+                }
+            ],
+            "output": "core_tmp",
+            "uniforms": {
+                "BlurConfig": [
+                    { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
+                    { "name": "Radius", "type": "float", "value": 2.0 }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "minecraft:post/entity_outline_box_blur",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "core_tmp",
+                    "bilinear": true
+                }
+            ],
+            "output": "core",
+            "uniforms": {
+                "BlurConfig": [
+                    { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
+                    { "name": "Radius", "type": "float", "value": 2.0 }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_glow_blur",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "sharp",
+                    "bilinear": true
+                }
+            ],
+            "output": "glow_h",
+            "uniforms": {
+                "BlurConfig": [
+                    { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
+                    { "name": "Radius", "type": "float", "value": 20.0 }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_glow_blur",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "glow_h",
+                    "bilinear": true
+                }
+            ],
+            "output": "glow_v",
+            "uniforms": {
+                "BlurConfig": [
+                    { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
+                    { "name": "Radius", "type": "float", "value": 20.0 }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_glow_combine",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "core"
+                },
+                {
+                    "sampler_name": "Glow",
+                    "target": "glow_v"
+                }
+            ],
+            "output": "minecraft:entity_outline"
+        }
+    ]
+}

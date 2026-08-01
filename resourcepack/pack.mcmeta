@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "Outline — wide purple glow for the entity outline post effect",
+    "pack_format": 64,
+    "supported_formats": { "min_inclusive": 1, "max_inclusive": 999 }
+  }
+}
