@@ -11,11 +11,12 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 // How far the halo is pushed before clipping. Raise for a heavier bloom.
-const float GLOW_STRENGTH = 1.25;
-// Below 1.0 this lifts the faint outer falloff without blowing out the middle.
-const float GLOW_GAMMA = 0.70;
+const float GLOW_STRENGTH = 0.90;
+// Above 1.0 steepens the falloff so the haze hugs the line; below 1.0 flattens
+// it into a solid slab, which reads as a thick marker stroke rather than a glow.
+const float GLOW_GAMMA = 1.30;
 // How much white is mixed into the core line, 0.0 = pure outline colour.
-const float CORE_WHITEN = 0.40;
+const float CORE_WHITEN = 0.85;
 
 // Renormalise to full brightness; the sobel pass dims the entity colour and we
 // want the configured colour at full strength regardless.

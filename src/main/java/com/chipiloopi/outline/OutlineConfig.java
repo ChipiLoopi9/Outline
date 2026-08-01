@@ -22,7 +22,7 @@ public class OutlineConfig {
 
 	public boolean enabled = true;
 	/** Outline color as "#RRGGBB". */
-	public String color = "#9B30FF";
+	public String color = "#8A2BE2";
 	public boolean outlineSelf = false;
 	public Targets targets = Targets.PLAYERS;
 
@@ -45,7 +45,7 @@ public class OutlineConfig {
 			}
 			return (int) (Long.parseLong(s, 16) & 0xFFFFFFL);
 		} catch (Exception e) {
-			OutlineMod.LOGGER.warn("Invalid outline color '{}', using default #9B30FF", hex);
+			OutlineMod.LOGGER.warn("Invalid outline color '{}', using default #8A2BE2", hex);
 			return OutlineMod.DEFAULT_COLOR_RGB;
 		}
 	}
@@ -61,7 +61,7 @@ public class OutlineConfig {
 				OutlineConfig cfg = GSON.fromJson(Files.readString(file), OutlineConfig.class);
 				if (cfg != null) {
 					if (cfg.color == null) {
-						cfg.color = "#9B30FF";
+						cfg.color = "#8A2BE2";
 					}
 					if (cfg.targets == null) {
 						cfg.targets = Targets.PLAYERS;

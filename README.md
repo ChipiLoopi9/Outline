@@ -36,7 +36,7 @@ The jar ends up in `build/libs/outline-1.0.0.jar`. Drop it (plus Fabric API) int
 ```json
 {
   "enabled": true,
-  "color": "#9B30FF",
+  "color": "#8A2BE2",
   "outlineSelf": false,
   "targets": "PLAYERS"
 }
@@ -79,7 +79,7 @@ from a plain glowing effect. This mod overrides
 |---|---|---|
 | 1 | `minecraft:post/entity_sobel` | edge-detect the silhouette → `sharp` |
 | 2–3 | `minecraft:post/entity_outline_box_blur` | vanilla 2px blur → `core` (the crisp line) |
-| 4–5 | `outline:post/outline_glow_blur` | wide Gaussian, radius 20 → `glow_v` (the halo) |
+| 4–5 | `outline:post/outline_glow_blur` | wide Gaussian, radius 18 → `glow_v` (the halo) |
 | 6 | `outline:post/outline_glow_combine` | core over halo → `minecraft:entity_outline` |
 
 The core path is byte-identical to vanilla, so the crisp line is unchanged; the glow is
@@ -89,11 +89,11 @@ added around it.
 
 Edit these and rebuild:
 
-- **Glow width** — `Radius` (currently `20.0`) in the two `outline_glow_blur` passes of
+- **Glow width** — `Radius` (currently `18.0`) in the two `outline_glow_blur` passes of
   `assets/minecraft/post_effect/entity_outline.json`. Raise for a bigger bloom.
 - **Glow intensity** — `GLOW_STRENGTH` in
   `assets/outline/shaders/post/outline_glow_combine.fsh`.
-- **Outer falloff** — `GLOW_GAMMA`; below `1.0` lifts the faint outer edge.
+- **Outer falloff** — `GLOW_GAMMA`; above `1.0` keeps the haze tight to the line, below `1.0` flattens it into a thick slab.
 - **Core brightness** — `CORE_WHITEN`; `0.0` is the pure outline color, higher is whiter.
 
 ### If the glow doesn't appear

@@ -68,7 +68,7 @@
             "uniforms": {
                 "BlurConfig": [
                     { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
-                    { "name": "Radius", "type": "float", "value": 20.0 }
+                    { "name": "Radius", "type": "float", "value": 18.0 }
                 ]
             }
         },
@@ -86,7 +86,7 @@
             "uniforms": {
                 "BlurConfig": [
                     { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
-                    { "name": "Radius", "type": "float", "value": 20.0 }
+                    { "name": "Radius", "type": "float", "value": 18.0 }
                 ]
             }
         },
