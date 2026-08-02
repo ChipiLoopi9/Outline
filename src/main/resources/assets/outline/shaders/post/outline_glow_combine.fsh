@@ -13,6 +13,7 @@
 
 uniform sampler2D InSampler;   // crisp core line
 uniform sampler2D GlowSampler; // soft rim halo
+uniform sampler2D MaskSampler; // raw silhouette, to keep the halo outside it
 
 in vec2 texCoord;
 
@@ -40,6 +41,15 @@ void main() {
 
     float coreAlpha = clamp(core.a * CORE_STRENGTH, 0.0, 1.0);
     float glowAlpha = clamp(pow(clamp(glow.a, 0.0, 1.0), GLOW_GAMMA) * GLOW_STRENGTH, 0.0, 1.0);
+
+    // Confine the halo to the outside of the silhouette. A blur spreads inward
+    // as well as outward, so on a distant player -- whose on-screen half-width
+    // is smaller than the blur radius -- the two sides bleed past each other and
+    // sum, filling the body into a solid lozenge with no readable shape. That is
+    // what forced the radius down to the point where the glow vanished. Masking
+    // by the silhouette makes the interior unfillable at any radius, so the halo
+    // can be as wide as it needs to be for the near-range look.
+    glowAlpha *= 1.0 - clamp(texture(MaskSampler, texCoord).a, 0.0, 1.0);
 
     vec3 coreColor = mix(core.rgb, vec3(1.0), CORE_WHITEN);
     vec3 glowColor = glow.rgb;

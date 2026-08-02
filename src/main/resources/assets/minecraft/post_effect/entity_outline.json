@@ -100,7 +100,7 @@
                     {
                         "name": "Radius",
                         "type": "float",
-                        "value": 9.0
+                        "value": 18.0
                     }
                 ]
             }
@@ -129,7 +129,7 @@
                     {
                         "name": "Radius",
                         "type": "float",
-                        "value": 9.0
+                        "value": 18.0
                     }
                 ]
             }
@@ -145,6 +145,10 @@
                 {
                     "sampler_name": "Glow",
                     "target": "glow_v"
+                },
+                {
+                    "sampler_name": "Mask",
+                    "target": "minecraft:entity_outline"
                 }
             ],
             "output": "minecraft:entity_outline"
