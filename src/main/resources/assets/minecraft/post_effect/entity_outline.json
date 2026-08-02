@@ -68,7 +68,7 @@
             "uniforms": {
                 "BlurConfig": [
                     { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
-                    { "name": "Radius", "type": "float", "value": 18.0 }
+                    { "name": "Radius", "type": "float", "value": 14.0 }
                 ]
             }
         },
@@ -86,7 +86,7 @@
             "uniforms": {
                 "BlurConfig": [
                     { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
-                    { "name": "Radius", "type": "float", "value": 18.0 }
+                    { "name": "Radius", "type": "float", "value": 14.0 }
                 ]
             }
         },
@@ -101,6 +101,10 @@
                 {
                     "sampler_name": "Glow",
                     "target": "glow_v"
+                },
+                {
+                    "sampler_name": "Main",
+                    "target": "minecraft:main"
                 }
             ],
             "output": "minecraft:entity_outline"

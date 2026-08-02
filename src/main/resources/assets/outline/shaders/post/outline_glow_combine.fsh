@@ -1,22 +1,41 @@
 #version 330
 
-// Lays the crisp outline over the wide halo: bright, slightly whitened core
-// line on top, saturated purple bloom falling off around it.
+// Lays the crisp core line over the wide halo and composites the halo as
+// LIGHT rather than as paint.
+//
+// Vanilla merges the entity_outline target with straight alpha blending:
+//
+//     final = C * A + S * (1 - A)
+//
+// That can only replace scene colour. Against a dark scene, replacing a near
+// black pixel with violet reads as a glow; against bright terrain the same
+// alpha replaces a sunlit pixel with violet, which is a flat purple band and
+// actually darkens it. So instead of picking C as "the glow colour", solve for
+// the C that makes vanilla's own blend produce a screen composite:
+//
+//     desired = screen(S, glow) = 1 - (1 - S) * (1 - glow)
+//     C       = (desired - S * (1 - A)) / A
+//
+// screen() only ever brightens, so the halo glows on dark scenes and quietly
+// brightens bright ones instead of tinting them. The division is safe: glow
+// energy is itself proportional to A, so C stays bounded as A approaches 0.
 
-uniform sampler2D InSampler;   // vanilla-style 2px outline
+uniform sampler2D InSampler;   // crisp 2px core line
 uniform sampler2D GlowSampler; // wide soft halo
+uniform sampler2D MainSampler; // the scene as drawn so far
 
 in vec2 texCoord;
 
 out vec4 fragColor;
 
-// How far the halo is pushed before clipping. Raise for a heavier bloom.
-const float GLOW_STRENGTH = 0.90;
-// Above 1.0 steepens the falloff so the haze hugs the line; below 1.0 flattens
-// it into a solid slab, which reads as a thick marker stroke rather than a glow.
-const float GLOW_GAMMA = 1.30;
-// How much white is mixed into the core line, 0.0 = pure outline colour.
-const float CORE_WHITEN = 0.85;
+// Halo intensity. Higher is safe here in a way it was not under plain alpha
+// blending, because screen() cannot push past white.
+const float GLOW_STRENGTH = 1.15;
+// Shapes the falloff. Above 1.0 keeps the halo tight to the line.
+const float GLOW_GAMMA = 1.15;
+// How much white is mixed into the core line. The reference line is nearly
+// white while its halo stays violet, so this runs high on purpose.
+const float CORE_WHITEN = 0.88;
 
 // Renormalise to full brightness; the sobel pass dims the entity colour and we
 // want the configured colour at full strength regardless.
@@ -28,17 +47,24 @@ vec3 fullBright(vec3 color) {
 void main() {
     vec4 core = texture(InSampler, texCoord);
     vec4 glow = texture(GlowSampler, texCoord);
+    vec3 scene = texture(MainSampler, texCoord).rgb;
 
-    vec3 coreColor = mix(fullBright(core.rgb), vec3(1.0), CORE_WHITEN);
-    vec3 glowColor = fullBright(glow.rgb);
-
-    float coreAlpha = clamp(core.a, 0.0, 1.0);
     float glowAlpha = clamp(pow(clamp(glow.a, 0.0, 1.0), GLOW_GAMMA) * GLOW_STRENGTH, 0.0, 1.0);
+    float coreAlpha = clamp(core.a, 0.0, 1.0);
 
-    float outAlpha = coreAlpha + glowAlpha * (1.0 - coreAlpha);
-    vec3 outColor = outAlpha > 0.0001
-        ? (coreColor * coreAlpha + glowColor * glowAlpha * (1.0 - coreAlpha)) / outAlpha
-        : vec3(0.0);
+    // Halo keeps the configured colour; the core line runs nearly white.
+    vec3 haloColor = fullBright(glow.rgb);
+    vec3 coreColor = mix(fullBright(core.rgb), vec3(1.0), CORE_WHITEN);
+
+    vec3 glowEnergy = haloColor * glowAlpha;
+    vec3 screened = 1.0 - (1.0 - scene) * (1.0 - glowEnergy);
+
+    vec3 desired = mix(screened, coreColor, coreAlpha);
+
+    float outAlpha = max(coreAlpha, glowAlpha);
+    vec3 outColor = outAlpha > 0.001
+        ? clamp((desired - scene * (1.0 - outAlpha)) / outAlpha, 0.0, 1.0)
+        : scene;
 
     fragColor = vec4(outColor, outAlpha);
 }
