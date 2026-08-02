@@ -4,7 +4,9 @@
         "core_tmp": {},
         "core": {},
         "glow_h": {},
-        "glow_v": {}
+        "glow_v": {},
+        "size_h": {},
+        "size_v": {}
     },
     "passes": [
         {
@@ -31,8 +33,19 @@
             "output": "core_tmp",
             "uniforms": {
                 "BlurConfig": [
-                    { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
-                    { "name": "Radius", "type": "float", "value": 2.0 }
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            1.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 2.0
+                    }
                 ]
             }
         },
@@ -49,8 +62,19 @@
             "output": "core",
             "uniforms": {
                 "BlurConfig": [
-                    { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
-                    { "name": "Radius", "type": "float", "value": 2.0 }
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 2.0
+                    }
                 ]
             }
         },
@@ -67,8 +91,19 @@
             "output": "glow_h",
             "uniforms": {
                 "BlurConfig": [
-                    { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
-                    { "name": "Radius", "type": "float", "value": 26.0 }
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            1.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 26.0
+                    }
                 ]
             }
         },
@@ -85,8 +120,77 @@
             "output": "glow_v",
             "uniforms": {
                 "BlurConfig": [
-                    { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
-                    { "name": "Radius", "type": "float", "value": 26.0 }
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 26.0
+                    }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_size",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "minecraft:entity_outline",
+                    "bilinear": true
+                }
+            ],
+            "output": "size_h",
+            "uniforms": {
+                "BlurConfig": [
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            1.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 26.0
+                    }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_size",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "size_h",
+                    "bilinear": true
+                }
+            ],
+            "output": "size_v",
+            "uniforms": {
+                "BlurConfig": [
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 26.0
+                    }
                 ]
             }
         },
@@ -101,6 +205,10 @@
                 {
                     "sampler_name": "Glow",
                     "target": "glow_v"
+                },
+                {
+                    "sampler_name": "Size",
+                    "target": "size_v"
                 }
             ],
             "output": "minecraft:entity_outline"

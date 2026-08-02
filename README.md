@@ -80,7 +80,8 @@ from a plain glowing effect. This mod overrides
 | 1 | `outline:post/outline_edge` | edge-detect, preserving the exact colour → `sharp` |
 | 2–3 | `outline:post/outline_glow_blur` | 2px blur → `core` (the crisp line) |
 | 4–5 | `outline:post/outline_glow_blur` | wide Gaussian, radius 26 → `glow_v` (the halo) |
-| 6 | `outline:post/outline_glow_combine` | core over halo → `minecraft:entity_outline` |
+| 6–7 | `outline:post/outline_size` | measure on-screen size → `size_v` |
+| 8 | `outline:post/outline_glow_combine` | core over halo, halo faded by range → `minecraft:entity_outline` |
 
 The core path is byte-identical to vanilla, so the crisp line is unchanged; the glow is
 added around it.
@@ -95,6 +96,10 @@ Edit these and rebuild:
   `assets/outline/shaders/post/outline_glow_combine.fsh`.
 - **Outer falloff** — `GLOW_GAMMA`; above `1.0` keeps the haze tight to the line, below `1.0` flattens it into a thick slab.
 - **Core brightness** — `CORE_WHITEN`; `0.0` is the pure outline color, higher is whiter.
+- **Range fade** — `SIZE_FADE_LO` / `SIZE_FADE_HI`; the halo is faded out for
+  entities that cover little of the blur kernel, so distant players keep the
+  crisp outline without becoming purple blobs. Lower both to let the glow reach
+  further out.
 
 ### If the glow doesn't appear
 
