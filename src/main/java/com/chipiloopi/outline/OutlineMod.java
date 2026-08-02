@@ -20,7 +20,7 @@ public final class OutlineMod {
 	public static final String MOD_ID = "outline";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static final int DEFAULT_COLOR_RGB = 0x8A2BE2;
+	public static final int DEFAULT_COLOR_RGB = 0x6A1B9A;
 
 	private static OutlineConfig config = new OutlineConfig();
 

@@ -20,9 +20,19 @@ public class OutlineConfig {
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+	/**
+	 * Bumped whenever the default color changes. The config file is written on
+	 * first launch and never overwritten afterwards, so without this an old
+	 * file keeps pinning the color to a previous default and no amount of
+	 * changing {@link #DEFAULT_COLOR} would ever reach an existing install.
+	 */
+	static final int CURRENT_VERSION = 2;
+	static final String DEFAULT_COLOR = "#6A1B9A";
+
+	public int configVersion = CURRENT_VERSION;
 	public boolean enabled = true;
 	/** Outline color as "#RRGGBB". */
-	public String color = "#8A2BE2";
+	public String color = DEFAULT_COLOR;
 	public boolean outlineSelf = false;
 	public Targets targets = Targets.PLAYERS;
 
@@ -45,7 +55,7 @@ public class OutlineConfig {
 			}
 			return (int) (Long.parseLong(s, 16) & 0xFFFFFFL);
 		} catch (Exception e) {
-			OutlineMod.LOGGER.warn("Invalid outline color '{}', using default #8A2BE2", hex);
+			OutlineMod.LOGGER.warn("Invalid outline color {}, using default {}", hex, DEFAULT_COLOR);
 			return OutlineMod.DEFAULT_COLOR_RGB;
 		}
 	}
@@ -61,10 +71,17 @@ public class OutlineConfig {
 				OutlineConfig cfg = GSON.fromJson(Files.readString(file), OutlineConfig.class);
 				if (cfg != null) {
 					if (cfg.color == null) {
-						cfg.color = "#8A2BE2";
+						cfg.color = DEFAULT_COLOR;
 					}
 					if (cfg.targets == null) {
 						cfg.targets = Targets.PLAYERS;
+					}
+					if (cfg.configVersion < CURRENT_VERSION) {
+						OutlineMod.LOGGER.info("Updating outline color {} -> {} (config v{} -> v{})",
+								cfg.color, DEFAULT_COLOR, cfg.configVersion, CURRENT_VERSION);
+						cfg.color = DEFAULT_COLOR;
+						cfg.configVersion = CURRENT_VERSION;
+						save(cfg);
 					}
 					return cfg;
 				}

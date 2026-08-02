@@ -36,7 +36,7 @@ The jar ends up in `build/libs/outline-1.0.0.jar`. Drop it (plus Fabric API) int
 ```json
 {
   "enabled": true,
-  "color": "#8A2BE2",
+  "color": "#6A1B9A",
   "outlineSelf": false,
   "targets": "PLAYERS"
 }
@@ -77,9 +77,9 @@ from a plain glowing effect. This mod overrides
 
 | Pass | Shader | Purpose |
 |---|---|---|
-| 1 | `minecraft:post/entity_sobel` | edge-detect the silhouette → `sharp` |
-| 2–3 | `minecraft:post/entity_outline_box_blur` | vanilla 2px blur → `core` (the crisp line) |
-| 4–5 | `outline:post/outline_glow_blur` | wide Gaussian, radius 14 → `glow_v` (the halo) |
+| 1 | `outline:post/outline_edge` | edge-detect, preserving the exact colour → `sharp` |
+| 2–3 | `outline:post/outline_glow_blur` | 2px blur → `core` (the crisp line) |
+| 4–5 | `outline:post/outline_glow_blur` | wide Gaussian, radius 20 → `glow_v` (the halo) |
 | 6 | `outline:post/outline_glow_combine` | core over halo → `minecraft:entity_outline` |
 
 The core path is byte-identical to vanilla, so the crisp line is unchanged; the glow is
@@ -89,26 +89,12 @@ added around it.
 
 Edit these and rebuild:
 
-- **Glow width** — `Radius` (currently `14.0`) in the two `outline_glow_blur` passes of
+- **Glow width** — `Radius` (currently `20.0`) in the two `outline_glow_blur` passes of
   `assets/minecraft/post_effect/entity_outline.json`. Raise for a bigger bloom.
 - **Glow intensity** — `GLOW_STRENGTH` in
-  `assets/outline/shaders/post/outline_glow_combine.fsh`. Safe to raise: the halo
-  is screen-blended, so it cannot push past white.
+  `assets/outline/shaders/post/outline_glow_combine.fsh`.
 - **Outer falloff** — `GLOW_GAMMA`; above `1.0` keeps the haze tight to the line, below `1.0` flattens it into a thick slab.
 - **Core brightness** — `CORE_WHITEN`; `0.0` is the pure outline color, higher is whiter.
-
-### Why the halo is composited against the scene
-
-Vanilla merges the outline target with straight alpha blending, `final = C*A +
-S*(1-A)`, which can only *replace* scene colour. On a dark scene, replacing a
-near-black pixel with violet reads as a glow; on bright terrain the same alpha
-replaces a sunlit pixel with violet, giving a flat purple band that actually
-darkens what it covers.
-
-So the combine pass takes `minecraft:main` as a third sampler and solves for the
-`C` that makes vanilla's own blend produce a screen composite,
-`1 - (1 - scene) * (1 - glow)`. Screen only ever brightens, so the halo glows in
-the dark and quietly brightens bright scenes instead of tinting them.
 
 ### If the glow doesn't appear
 

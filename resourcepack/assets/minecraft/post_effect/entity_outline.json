@@ -9,7 +9,7 @@
     "passes": [
         {
             "vertex_shader": "minecraft:core/screenquad",
-            "fragment_shader": "minecraft:post/entity_sobel",
+            "fragment_shader": "outline:post/outline_edge",
             "inputs": [
                 {
                     "sampler_name": "In",
@@ -20,7 +20,7 @@
         },
         {
             "vertex_shader": "minecraft:core/screenquad",
-            "fragment_shader": "minecraft:post/entity_outline_box_blur",
+            "fragment_shader": "outline:post/outline_glow_blur",
             "inputs": [
                 {
                     "sampler_name": "In",
@@ -38,7 +38,7 @@
         },
         {
             "vertex_shader": "minecraft:core/screenquad",
-            "fragment_shader": "minecraft:post/entity_outline_box_blur",
+            "fragment_shader": "outline:post/outline_glow_blur",
             "inputs": [
                 {
                     "sampler_name": "In",
@@ -68,7 +68,7 @@
             "uniforms": {
                 "BlurConfig": [
                     { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
-                    { "name": "Radius", "type": "float", "value": 14.0 }
+                    { "name": "Radius", "type": "float", "value": 20.0 }
                 ]
             }
         },
@@ -86,7 +86,7 @@
             "uniforms": {
                 "BlurConfig": [
                     { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
-                    { "name": "Radius", "type": "float", "value": 14.0 }
+                    { "name": "Radius", "type": "float", "value": 20.0 }
                 ]
             }
         },
@@ -101,10 +101,6 @@
                 {
                     "sampler_name": "Glow",
                     "target": "glow_v"
-                },
-                {
-                    "sampler_name": "Main",
-                    "target": "minecraft:main"
                 }
             ],
             "output": "minecraft:entity_outline"
