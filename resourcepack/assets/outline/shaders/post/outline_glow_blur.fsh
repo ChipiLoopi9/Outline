@@ -1,10 +1,13 @@
 #version 330
 
-// Wide separable Gaussian blur used to turn the one-pixel outline edge into a
-// soft halo. Vanilla's entity_outline_box_blur declares a Radius uniform but
-// then shadows it with a hardcoded `float radius = 2.0`, which is why the
-// vanilla glow can never be wider than two pixels. This one actually honours
-// the uniform.
+// Wide separable Gaussian blur that turns the outline edge into a soft rim of
+// light around the silhouette. Vanilla's entity_outline_box_blur declares a
+// Radius uniform but then shadows it with a hardcoded `float radius = 2.0`,
+// which is why the vanilla glow can never be wider than two pixels. This one
+// actually honours the uniform.
+//
+// Only the halo uses this shader; the crisp line is built by outline_core_blur,
+// which needs the opposite gain. See the comment there.
 
 layout(std140) uniform SamplerInfo {
     vec2 OutSize;
@@ -22,12 +25,24 @@ in vec2 texCoord;
 
 out vec4 fragColor;
 
+// The halo is light, not paint: it has to stay translucent even at its
+// brightest so terrain still reads through it. sqrt(radius) per pass undoes the
+// kernel's spreading of a one-pixel edge; GAIN then deliberately undershoots so
+// the profile stays a gradient instead of clamping into an opaque plateau with
+// a hard outer edge.
+const float GAIN = 0.50;
+
 void main() {
-    vec2 oneTexel = 1.0 / InSize;
-    vec2 sampleStep = oneTexel * BlurDir;
+    vec2 sampleStep = (1.0 / InSize) * BlurDir;
 
     float radius = max(Radius, 1.0);
-    float sigma = max(radius * 0.5, 0.5);
+
+    // radius / 3.0, not radius * 0.5. The loop truncates the kernel at
+    // +-radius, so sigma decides how much weight is thrown away at the cut: at
+    // 2 sigma that is exp(-2) = 13.5% of the peak, which ends the halo in a
+    // visible hard ring at exactly `radius` pixels. At 3 sigma it is
+    // exp(-4.5) = 1.1%, low enough that the halo decays into nothing.
+    float sigma = max(radius / 3.0, 0.5);
     float twoSigmaSq = 2.0 * sigma * sigma;
 
     vec3 colorSum = vec3(0.0);
@@ -45,18 +60,8 @@ void main() {
         weightSum += weight;
     }
 
-    float alpha = alphaSum / weightSum;
     vec3 color = alphaSum > 0.0001 ? colorSum / alphaSum : vec3(0.0);
-
-    // A one-pixel edge spread over this kernel peaks at roughly 0.8/radius, so
-    // sqrt(radius) per pass would restore a two-pass peak of ~0.8. That is
-    // deliberately undershot by GAIN: pushing the peak to the ceiling makes the
-    // clamp below flatten everything near the line into a fully opaque plateau,
-    // which reads as a hard band with a soft edge rather than a glow. Keeping
-    // the peak under 1.0 leaves the entire profile a gradient that decays with
-    // distance from the silhouette.
-    const float GAIN = 0.62;
-    alpha = clamp(alpha * sqrt(radius) * GAIN, 0.0, 1.0);
+    float alpha = clamp((alphaSum / weightSum) * sqrt(radius) * GAIN, 0.0, 1.0);
 
     fragColor = vec4(color, alpha);
 }

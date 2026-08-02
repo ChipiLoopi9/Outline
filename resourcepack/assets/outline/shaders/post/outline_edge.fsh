@@ -5,7 +5,7 @@
 // Vanilla's entity_sobel emits `outColor * 0.2`, an unnormalised sum of five
 // taps, so the colour it produces depends on how many neighbours happen to sit
 // inside the silhouette. Dividing by the coverage instead returns the entity's
-// actual colour, which is what lets a dark purple stay dark instead of drifting
+// actual colour, which is what lets a dark colour stay dark instead of drifting
 // toward whatever the tap count implies.
 
 uniform sampler2D InSampler;

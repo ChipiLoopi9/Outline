@@ -9,14 +9,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Vanilla derives the outline color from the entity's team color. Overriding
- * it at the source keeps the purple consistent everywhere the pipeline reads
+ * it at the source keeps the configured colour consistent everywhere the pipeline reads
  * it (including the vanilla glowing path, e.g. when a target also has the
  * Glowing status effect).
  */
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 	@Inject(method = "getTeamColorValue", at = @At("HEAD"), cancellable = true, require = 0)
-	private void outline$purpleTeamColor(CallbackInfoReturnable<Integer> cir) {
+	private void outline$overrideTeamColor(CallbackInfoReturnable<Integer> cir) {
 		if (OutlineMod.shouldOutline((Entity) (Object) this)) {
 			cir.setReturnValue(OutlineMod.getOutlineColorRgb());
 		}

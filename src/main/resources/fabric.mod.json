@@ -3,7 +3,7 @@
 	"id": "outline",
 	"version": "${version}",
 	"name": "Outline",
-	"description": "Purple glow outlines on players — visible through walls, exactly like the vanilla glowing effect, always on.",
+	"description": "Glowing outlines on players — visible through walls, exactly like the vanilla glowing effect, always on.",
 	"authors": [
 		"ChipiLoopi9"
 	],

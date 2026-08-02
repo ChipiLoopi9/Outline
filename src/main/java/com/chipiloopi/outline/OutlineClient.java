@@ -28,12 +28,12 @@ public class OutlineClient implements ClientModInitializer {
 				boolean on = OutlineMod.isEnabled();
 				client.inGameHud.setOverlayMessage(
 						Text.literal("Outline: " + (on ? "ON" : "OFF"))
-								.formatted(on ? Formatting.LIGHT_PURPLE : Formatting.GRAY),
+								.formatted(on ? Formatting.AQUA : Formatting.GRAY),
 						false);
 			}
 		});
 
-		OutlineMod.LOGGER.info("Outline loaded — purple outlines {} (toggle with O)",
+		OutlineMod.LOGGER.info("Outline loaded — outlines {} (toggle with O)",
 				OutlineMod.isEnabled() ? "enabled" : "disabled");
 	}
 }

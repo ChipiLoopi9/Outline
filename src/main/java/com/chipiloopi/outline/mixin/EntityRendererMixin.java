@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * drawn into the outline (glow) framebuffer — and with which color — is carried
  * by {@link EntityRenderState#outlineColor}, filled in during state extraction.
  * Writing a color at the end of {@code updateRenderState} both enables the
- * outline and tints it purple, walls or no walls.
+ * outline and applies the configured tint, walls or no walls.
  */
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin {

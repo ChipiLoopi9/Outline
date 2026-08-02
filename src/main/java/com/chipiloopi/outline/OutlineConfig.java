@@ -26,10 +26,25 @@ public class OutlineConfig {
 	 * file keeps pinning the color to a previous default and no amount of
 	 * changing {@link #DEFAULT_COLOR} would ever reach an existing install.
 	 */
-	static final int CURRENT_VERSION = 2;
+	static final int CURRENT_VERSION = 3;
+
+	/**
+	 * Deep purple. The look being matched is a violet glow from the reference
+	 * screenshots, so hue is a product requirement here rather than a free
+	 * choice: a highlight that reads as "not the reference colour" has failed
+	 * regardless of how well it separates from the terrain palette.
+	 */
 	static final String DEFAULT_COLOR = "#6A1B9A";
 
-	public int configVersion = CURRENT_VERSION;
+	/**
+	 * Must default to 0, not {@link #CURRENT_VERSION}. Gson instantiates this
+	 * class with its no-arg constructor and then overwrites only the fields
+	 * actually present in the JSON, so a config written before this field
+	 * existed would otherwise come back already stamped as current and skip the
+	 * migration below — permanently pinning those installs to the colour they
+	 * were first written with.
+	 */
+	public int configVersion = 0;
 	public boolean enabled = true;
 	/** Outline color as "#RRGGBB". */
 	public String color = DEFAULT_COLOR;
@@ -53,11 +68,42 @@ public class OutlineConfig {
 			} else if (s.startsWith("0x") || s.startsWith("0X")) {
 				s = s.substring(2);
 			}
+			// Require exactly RRGGBB. Without this, "#FFF" parses happily as
+			// 0x000FFF — a dark blue — instead of being reported as the typo it
+			// is, and the user is left wondering why their colour was ignored.
+			if (s.length() != 6) {
+				throw new NumberFormatException("expected 6 hex digits, got " + s.length());
+			}
 			return (int) (Long.parseLong(s, 16) & 0xFFFFFFL);
 		} catch (Exception e) {
 			OutlineMod.LOGGER.warn("Invalid outline color {}, using default {}", hex, DEFAULT_COLOR);
 			return OutlineMod.DEFAULT_COLOR_RGB;
 		}
+	}
+
+	/**
+	 * Every colour that has ever shipped as {@link #DEFAULT_COLOR}. A version
+	 * bump only rewrites the colour if the file still holds one of these, so a
+	 * user who deliberately picked their own colour keeps it while everyone
+	 * still on an old default gets moved forward.
+	 */
+	private static final String[] PREVIOUS_DEFAULTS = {
+			"#AA00FF", // v1 — the very first build, and what most installs still hold
+			"#9B30FF", // v2
+			"#8A2BE2", // v3 — blueviolet
+	};
+
+	private static boolean isPreviousDefault(String hex) {
+		if (hex == null) {
+			return true;
+		}
+		String s = hex.trim();
+		for (String old : PREVIOUS_DEFAULTS) {
+			if (s.equalsIgnoreCase(old)) {
+				return true;
+			}
+		}
+		return s.equalsIgnoreCase(DEFAULT_COLOR);
 	}
 
 	private static Path path() {
@@ -77,9 +123,14 @@ public class OutlineConfig {
 						cfg.targets = Targets.PLAYERS;
 					}
 					if (cfg.configVersion < CURRENT_VERSION) {
-						OutlineMod.LOGGER.info("Updating outline color {} -> {} (config v{} -> v{})",
-								cfg.color, DEFAULT_COLOR, cfg.configVersion, CURRENT_VERSION);
-						cfg.color = DEFAULT_COLOR;
+						if (isPreviousDefault(cfg.color)) {
+							OutlineMod.LOGGER.info("Updating outline color {} -> {} (config v{} -> v{})",
+									cfg.color, DEFAULT_COLOR, cfg.configVersion, CURRENT_VERSION);
+							cfg.color = DEFAULT_COLOR;
+						} else {
+							OutlineMod.LOGGER.info("Keeping custom outline color {} (config v{} -> v{})",
+									cfg.color, cfg.configVersion, CURRENT_VERSION);
+						}
 						cfg.configVersion = CURRENT_VERSION;
 						save(cfg);
 					}
@@ -90,6 +141,10 @@ public class OutlineConfig {
 			OutlineMod.LOGGER.warn("Could not read {}, using defaults", file, e);
 		}
 		OutlineConfig cfg = new OutlineConfig();
+		// The field defaults to 0 so that a file *missing* the key is treated as
+		// pre-versioning; a file we are writing fresh is by definition current,
+		// and must say so or the next launch runs a pointless migration over it.
+		cfg.configVersion = CURRENT_VERSION;
 		save(cfg);
 		return cfg;
 	}
