@@ -49,10 +49,14 @@ void main() {
     vec3 color = alphaSum > 0.0001 ? colorSum / alphaSum : vec3(0.0);
 
     // A one-pixel edge spread over this kernel peaks at roughly 0.8/radius, so
-    // sqrt(radius) per pass brings the two-pass peak back to ~0.8 whatever the
-    // radius. Amplifying here rather than in the combine also keeps the halo
-    // out of the low end of the 8-bit target, where it would band badly.
-    alpha = clamp(alpha * sqrt(radius), 0.0, 1.0);
+    // sqrt(radius) per pass would restore a two-pass peak of ~0.8. That is
+    // deliberately undershot by GAIN: pushing the peak to the ceiling makes the
+    // clamp below flatten everything near the line into a fully opaque plateau,
+    // which reads as a hard band with a soft edge rather than a glow. Keeping
+    // the peak under 1.0 leaves the entire profile a gradient that decays with
+    // distance from the silhouette.
+    const float GAIN = 0.62;
+    alpha = clamp(alpha * sqrt(radius) * GAIN, 0.0, 1.0);
 
     fragColor = vec4(color, alpha);
 }

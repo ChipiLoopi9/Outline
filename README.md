@@ -79,7 +79,7 @@ from a plain glowing effect. This mod overrides
 |---|---|---|
 | 1 | `outline:post/outline_edge` | edge-detect, preserving the exact colour → `sharp` |
 | 2–3 | `outline:post/outline_glow_blur` | 2px blur → `core` (the crisp line) |
-| 4–5 | `outline:post/outline_glow_blur` | wide Gaussian, radius 20 → `glow_v` (the halo) |
+| 4–5 | `outline:post/outline_glow_blur` | wide Gaussian, radius 26 → `glow_v` (the halo) |
 | 6 | `outline:post/outline_glow_combine` | core over halo → `minecraft:entity_outline` |
 
 The core path is byte-identical to vanilla, so the crisp line is unchanged; the glow is
@@ -89,7 +89,7 @@ added around it.
 
 Edit these and rebuild:
 
-- **Glow width** — `Radius` (currently `20.0`) in the two `outline_glow_blur` passes of
+- **Glow width** — `Radius` (currently `26.0`) in the two `outline_glow_blur` passes of
   `assets/minecraft/post_effect/entity_outline.json`. Raise for a bigger bloom.
 - **Glow intensity** — `GLOW_STRENGTH` in
   `assets/outline/shaders/post/outline_glow_combine.fsh`.

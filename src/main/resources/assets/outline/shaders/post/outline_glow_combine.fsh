@@ -20,8 +20,9 @@ out vec4 fragColor;
 
 // Halo opacity at its brightest, right against the line.
 const float GLOW_STRENGTH = 1.00;
-// Above 1.0 keeps the halo tight to the line; below 1.0 spreads it flat.
-const float GLOW_GAMMA = 1.05;
+// Shapes how fast the halo fades with distance from the silhouette. Above 1.0
+// gives a steady decay; below 1.0 flattens it toward a uniform band.
+const float GLOW_GAMMA = 1.90;
 // How solid the core line is.
 const float CORE_STRENGTH = 1.10;
 // How much white is mixed into the core line so it reads as a defined edge.
