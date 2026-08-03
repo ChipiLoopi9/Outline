@@ -1,0 +1,45 @@
+package com.chipiloopi.outline;
+
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderSetup;
+import net.minecraft.util.Identifier;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Render layers that ignore the depth buffer, so the entity's own skin is drawn
+ * over whatever is in front of it.
+ *
+ * <p>The outline post-effect chain cannot do this: everything it receives is a
+ * flat-coloured silhouette in the outline framebuffer, with no texture and no
+ * lighting. Showing the actual skin through a wall means drawing the model a
+ * second time with depth testing switched off, which is a pipeline change
+ * rather than a shader one.
+ */
+public final class SeeThroughLayers {
+	/** Built from the vanilla entity snippet so vertex format and shader match. */
+	private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
+			.withLocation("pipeline/outline_see_through")
+			.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+			.build();
+
+	/** One layer per skin; entity renderers ask for these every frame. */
+	private static final Map<Identifier, RenderLayer> CACHE = new ConcurrentHashMap<>();
+
+	private SeeThroughLayers() {
+	}
+
+	public static RenderLayer get(Identifier texture) {
+		return CACHE.computeIfAbsent(texture, id -> RenderLayer.of(
+				"outline_see_through",
+				RenderSetup.builder(PIPELINE)
+						.texture("Sampler0", id)
+						.useLightmap()
+						.useOverlay()
+						.build()));
+	}
+}
