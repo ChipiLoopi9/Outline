@@ -20,9 +20,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Draws the model a second time on a depth-test-free layer, so the entity's own
  * skin shows through walls rather than just its outline.
  *
- * <p>Injected at TAIL on purpose: by then the renderer has already posed the
- * model for this frame, so the second submission reuses that pose instead of
- * whatever was left over from the previous entity.
+ * <p>Injected immediately before the renderer pops the matrix stack, which is
+ * the one point where the model is both posed for this frame and still under
+ * the renderer's own transform. Injecting at TAIL instead renders the model
+ * upside down and roughly a block and a half low, because entity models are
+ * authored inverted and the 180 degree flip plus Y offset that corrects them
+ * has already been unwound by the pop.
+ *
+ * <p>Reusing the renderer's transform rather than reconstructing it also avoids
+ * having to guess what vanilla passes to setupTransforms, where a wrong
+ * argument would silently misplace the model rather than fail to compile.
  *
  * <p>Targets are identified by {@code outlineColor} being set, which
  * {@link EntityRendererMixin} already fills in for exactly the configured
@@ -30,6 +37,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<S extends LivingEntityRenderState, M extends EntityModel<? super S>> {
+	/**
+	 * Block light 15, sky light 15. The see-through pass deliberately ignores
+	 * the entity's real light level: passing {@code state.light} multiplies the
+	 * skin by whatever lighting it actually sits in, which renders a player in
+	 * shadow — or behind a wall, where the sampled light is low — as a nearly
+	 * black silhouette with only the brightest texels surviving. A highlight
+	 * that disappears in the dark is useless, so this pass is always fully lit.
+	 */
+	private static final int OUTLINE_FULL_BRIGHT = 0x00F000F0;
+
 	@Shadow
 	protected M model;
 
@@ -38,7 +55,7 @@ public abstract class LivingEntityRendererMixin<S extends LivingEntityRenderStat
 
 	@Inject(
 			method = "render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V",
-			at = @At("TAIL"),
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;pop()V", ordinal = 0),
 			require = 0
 	)
 	private void outline$renderSkinThroughWalls(S state, MatrixStack matrices, OrderedRenderCommandQueue queue,
@@ -52,7 +69,7 @@ public abstract class LivingEntityRendererMixin<S extends LivingEntityRenderStat
 				state,
 				matrices,
 				SeeThroughLayers.get(this.getTexture(state)),
-				state.light,
+				OUTLINE_FULL_BRIGHT,
 				OverlayTexture.DEFAULT_UV,
 				0,
 				null);
