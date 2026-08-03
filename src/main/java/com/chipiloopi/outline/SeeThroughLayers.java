@@ -24,6 +24,13 @@ public final class SeeThroughLayers {
 	/** Built from the vanilla entity snippet so vertex format and shader match. */
 	private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
 			.withLocation("pipeline/outline_see_through")
+			// ENTITY_SNIPPET is a partial configuration: vanilla's entity pipelines
+			// attach the shader programs themselves on top of it. Without these the
+			// pipeline has no shader, and core/entity is what actually samples
+			// Sampler0 and applies ColorModulator and the lightmap -- omit it and
+			// every model draws solid black no matter how it is tinted or lit.
+			.withVertexShader("core/entity")
+			.withFragmentShader("core/entity")
 			.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
 			.build();
 

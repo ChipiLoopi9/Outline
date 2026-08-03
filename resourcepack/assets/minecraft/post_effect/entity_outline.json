@@ -100,7 +100,7 @@
                     {
                         "name": "Radius",
                         "type": "float",
-                        "value": 18.0
+                        "value": 28.0
                     }
                 ]
             }
@@ -129,7 +129,7 @@
                     {
                         "name": "Radius",
                         "type": "float",
-                        "value": 18.0
+                        "value": 28.0
                     }
                 ]
             }
