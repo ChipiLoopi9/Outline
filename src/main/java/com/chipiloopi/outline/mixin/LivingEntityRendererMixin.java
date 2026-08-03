@@ -71,6 +71,12 @@ public abstract class LivingEntityRendererMixin<S extends LivingEntityRenderStat
 				SeeThroughLayers.get(this.getTexture(state)),
 				OUTLINE_FULL_BRIGHT,
 				OverlayTexture.DEFAULT_UV,
+				// Tint, explicitly white. The shorter submitModel overload takes no
+				// tint at all, which left it at zero and multiplied every texel to
+				// black -- the model was drawing correctly, it was just being
+				// coloured out of existence.
+				0xFFFFFFFF,
+				null,
 				0,
 				null);
 	}
