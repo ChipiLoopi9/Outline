@@ -49,6 +49,8 @@ public class OutlineConfig {
 	/** Outline color as "#RRGGBB". */
 	public String color = DEFAULT_COLOR;
 	public boolean outlineSelf = false;
+	/** Draw the entity's skin through walls, not just its outline. */
+	public boolean renderThroughWalls = true;
 	public Targets targets = Targets.PLAYERS;
 
 	private transient int cachedRgb = -1;

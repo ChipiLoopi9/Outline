@@ -36,6 +36,11 @@ public final class OutlineMod {
 		config = newConfig;
 	}
 
+	/** Whether targets have their skin drawn through walls as well as an outline. */
+	public static boolean shouldRenderThroughWalls() {
+		return config.enabled && config.renderThroughWalls;
+	}
+
 	public static boolean isEnabled() {
 		return config.enabled;
 	}
