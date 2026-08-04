@@ -31,6 +31,15 @@ public final class SeeThroughLayers {
 			// every model draws solid black no matter how it is tinted or lit.
 			.withVertexShader("core/entity")
 			.withFragmentShader("core/entity")
+			// core/entity ends with `color *= lightMapColor`, so if the lightmap
+			// sampler is not bound for this pass the whole model multiplies to
+			// black — which is what kept happening no matter what tint or light
+			// value was submitted. EMISSIVE compiles that multiply out entirely,
+			// removing the dependency rather than trying to satisfy it, and full
+			// brightness is what a see-through highlight wants anyway.
+			.withShaderDefine("EMISSIVE")
+			// Likewise skips the overlay mix, which needs its own sampler.
+			.withShaderDefine("NO_OVERLAY")
 			.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
 			.build();
 
