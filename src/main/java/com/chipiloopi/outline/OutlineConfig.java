@@ -18,6 +18,17 @@ public class OutlineConfig {
 		ALL
 	}
 
+	public enum SeeThroughStyle {
+		/**
+		 * The entity's real skin. Parts can still resolve in submission order
+		 * against each other, since this pass reads the depth buffer but may not
+		 * write to it.
+		 */
+		SKIN,
+		/** A flat colour fill. No self-sorting artifacts, and includes armor. */
+		SILHOUETTE
+	}
+
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
 	/**
@@ -51,6 +62,8 @@ public class OutlineConfig {
 	public boolean outlineSelf = false;
 	/** Draw the entity's skin through walls, not just its outline. */
 	public boolean renderThroughWalls = true;
+	/** Whether occluded entities show their skin or a flat fill. */
+	public SeeThroughStyle seeThroughStyle = SeeThroughStyle.SKIN;
 	public Targets targets = Targets.PLAYERS;
 
 	private transient int cachedRgb = -1;
@@ -120,6 +133,9 @@ public class OutlineConfig {
 				if (cfg != null) {
 					if (cfg.color == null) {
 						cfg.color = DEFAULT_COLOR;
+					}
+					if (cfg.seeThroughStyle == null) {
+						cfg.seeThroughStyle = SeeThroughStyle.SKIN;
 					}
 					if (cfg.targets == null) {
 						cfg.targets = Targets.PLAYERS;

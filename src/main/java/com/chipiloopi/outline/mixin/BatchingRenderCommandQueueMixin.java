@@ -49,7 +49,7 @@ public abstract class BatchingRenderCommandQueueMixin {
 	}
 
 	private void outline$duplicate(Model model, Object state, MatrixStack matrices, int light, int overlay) {
-		if (!SeeThroughPass.shouldDuplicate()) {
+		if (!OutlineMod.useSilhouette() || !SeeThroughPass.shouldDuplicate()) {
 			return;
 		}
 

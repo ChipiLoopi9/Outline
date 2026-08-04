@@ -41,6 +41,11 @@ public final class OutlineMod {
 		return config.enabled && config.renderThroughWalls;
 	}
 
+	/** True when occluded entities should be filled flat rather than textured. */
+	public static boolean useSilhouette() {
+		return config.seeThroughStyle == OutlineConfig.SeeThroughStyle.SILHOUETTE;
+	}
+
 	public static boolean isEnabled() {
 		return config.enabled;
 	}
