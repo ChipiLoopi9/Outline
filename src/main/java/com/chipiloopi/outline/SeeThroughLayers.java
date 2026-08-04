@@ -42,9 +42,14 @@ public final class SeeThroughLayers {
 			.withShaderDefine("ALPHA_CUTOUT", 0.1F)
 			// Respect alpha for what survives the cutout.
 			.withBlend(BlendFunction.TRANSLUCENT)
-			// Matches the layers this replaces: entity models are two-sided, and
-			// culling their back faces punches holes in capes and the outer layer.
-			.withCull(false)
+			// Cull back faces, unlike the vanilla entity layers this stands in for.
+			// Vanilla can afford two-sided geometry because depth testing hides a
+			// model's far side; this pass has depth testing off, so without culling
+			// the back of every box draws over its front and you see straight into
+			// the inside of the head and torso. The cost is that genuinely
+			// two-sided parts, capes especially, are only visible from one side --
+			// far less objectionable than a model turned inside out.
+			.withCull(true)
 			// EMISSIVE skips the lightmap; this skips the directional shading that
 			// would otherwise darken faces by up to ~60% depending on their normal.
 			.withShaderDefine("NO_CARDINAL_LIGHTING")
