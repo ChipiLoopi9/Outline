@@ -23,17 +23,17 @@ out vec4 fragColor;
 // purpose: the halo's job is to make the silhouette pop out of the terrain, and
 // the moment it approaches opaque it stops being a glow and starts being a
 // sticker that hides the player inside it.
-const float GLOW_STRENGTH = 1.00;
+const float GLOW_STRENGTH = 0.95;
 // Shapes how fast the halo fades with distance from the silhouette. Above 1.0
 // gives a steady decay; below 1.0 flattens it toward a uniform band.
 const float GLOW_GAMMA = 1.20;
 // How solid the core line is. The line carries the shape information, so it is
 // pushed all the way to opaque.
-const float CORE_STRENGTH = 1.30;
+const float CORE_STRENGTH = 1.0;
 // A touch of white in the core so the line reads as a lit edge rather than a
 // flat stroke. Deliberately small: past ~0.3 the line stops carrying the
 // configured hue at all and every colour setting looks the same.
-const float CORE_WHITEN = 0.15;
+const float CORE_WHITEN = 0.3;
 
 void main() {
     vec4 core = texture(InSampler, texCoord);

@@ -30,7 +30,7 @@ out vec4 fragColor;
 // kernel's spreading of a one-pixel edge; GAIN then deliberately undershoots so
 // the profile stays a gradient instead of clamping into an opaque plateau with
 // a hard outer edge.
-const float GAIN = 0.55;
+const float GAIN = 0.5;
 
 void main() {
     vec2 sampleStep = (1.0 / InSize) * BlurDir;

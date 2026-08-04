@@ -34,7 +34,7 @@ out vec4 fragColor;
 // spreads a one-pixel edge out to roughly 1/radius, so sqrt(radius) per pass
 // undoes the spreading; GAIN then pushes the result to the clamp so the line
 // is solid rather than a 40%-alpha smear.
-const float GAIN = 1.45;
+const float GAIN = 1.1;
 
 void main() {
     vec2 sampleStep = (1.0 / InSize) * BlurDir;
