@@ -1,5 +1,6 @@
 package com.chipiloopi.outline;
 
+import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import net.minecraft.client.gl.RenderPipelines;
@@ -21,26 +22,38 @@ import java.util.concurrent.ConcurrentHashMap;
  * rather than a shader one.
  */
 public final class SeeThroughLayers {
-	/** Built from the vanilla entity snippet so vertex format and shader match. */
-	private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
+	/**
+	 * Built on the emissive entity snippet, which is core/entity with EMISSIVE
+	 * already defined and only Sampler0 declared — the lightmap sampler is
+	 * deliberately dropped, because EMISSIVE removes that uniform from the
+	 * shader entirely.
+	 *
+	 * <p>The settings below are not decoration. A player model always draws a
+	 * second, inflated skin layer — hat, jacket, sleeves, pants — over the whole
+	 * body, and on most skins those texels are fully transparent. Without
+	 * ALPHA_CUTOUT they are never discarded, and with no blend function their
+	 * alpha is ignored, so RGB 0 is written straight to the colour attachment:
+	 * an opaque black shell over a perfectly good body. That, not the tint, the
+	 * light value or the shader, is what made these models render black.
+	 */
+	private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_EMISSIVE_SNIPPET)
 			.withLocation("pipeline/outline_see_through")
-			// ENTITY_SNIPPET is a partial configuration: vanilla's entity pipelines
-			// attach the shader programs themselves on top of it. Without these the
-			// pipeline has no shader, and core/entity is what actually samples
-			// Sampler0 and applies ColorModulator and the lightmap -- omit it and
-			// every model draws solid black no matter how it is tinted or lit.
-			.withVertexShader("core/entity")
-			.withFragmentShader("core/entity")
-			// core/entity ends with `color *= lightMapColor`, so if the lightmap
-			// sampler is not bound for this pass the whole model multiplies to
-			// black — which is what kept happening no matter what tint or light
-			// value was submitted. EMISSIVE compiles that multiply out entirely,
-			// removing the dependency rather than trying to satisfy it, and full
-			// brightness is what a see-through highlight wants anyway.
-			.withShaderDefine("EMISSIVE")
-			// Likewise skips the overlay mix, which needs its own sampler.
-			.withShaderDefine("NO_OVERLAY")
+			// Discard the transparent texels of the outer skin layer.
+			.withShaderDefine("ALPHA_CUTOUT", 0.1F)
+			// Respect alpha for what survives the cutout.
+			.withBlend(BlendFunction.TRANSLUCENT)
+			// Matches the layers this replaces: entity models are two-sided, and
+			// culling their back faces punches holes in capes and the outer layer.
+			.withCull(false)
+			// EMISSIVE skips the lightmap; this skips the directional shading that
+			// would otherwise darken faces by up to ~60% depending on their normal.
+			.withShaderDefine("NO_CARDINAL_LIGHTING")
 			.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+			// Ignoring depth is the point; writing it is not. Without this the
+			// occluded model stamps its own far depth over the nearer wall, and
+			// every later depth-tested pass — particles, weather, clouds,
+			// translucents — then draws in front of that wall.
+			.withDepthWrite(false)
 			.build();
 
 	/** One layer per skin; entity renderers ask for these every frame. */
@@ -54,8 +67,6 @@ public final class SeeThroughLayers {
 				"outline_see_through",
 				RenderSetup.builder(PIPELINE)
 						.texture("Sampler0", id)
-						.useLightmap()
-						.useOverlay()
 						.build()));
 	}
 }

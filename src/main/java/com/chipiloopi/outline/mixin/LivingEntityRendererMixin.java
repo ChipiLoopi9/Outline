@@ -38,12 +38,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<S extends LivingEntityRenderState, M extends EntityModel<? super S>> {
 	/**
-	 * Block light 15, sky light 15. The see-through pass deliberately ignores
-	 * the entity's real light level: passing {@code state.light} multiplies the
-	 * skin by whatever lighting it actually sits in, which renders a player in
-	 * shadow — or behind a wall, where the sampled light is low — as a nearly
-	 * black silhouette with only the brightest texels surviving. A highlight
-	 * that disappears in the dark is useless, so this pass is always fully lit.
+	 * Block light 15, sky light 15. Retained only because submitModel requires a
+	 * light argument: the see-through pipeline defines EMISSIVE, so the shader
+	 * never samples the lightmap and this value has no effect on the result.
 	 */
 	private static final int OUTLINE_FULL_BRIGHT = 0x00F000F0;
 
