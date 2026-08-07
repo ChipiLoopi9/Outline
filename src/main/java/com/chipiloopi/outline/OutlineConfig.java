@@ -146,9 +146,11 @@ public class OutlineConfig {
 						cfg.targets = Targets.PLAYERS;
 					}
 					if (cfg.configVersion < CURRENT_VERSION) {
-						// SKIN shipped as the default in exactly one build and renders
-						// black in practice, so move those configs back rather than
-						// leaving them stuck on a style that does not work.
+						// SKIN shipped as the default in exactly one build, so anyone
+						// holding it got there by accident rather than by choosing
+						// it. Move those configs back to the style this mod is built
+						// around. (It rendered black at the time; that was a missing
+						// NO_OVERLAY define, since fixed, not the style itself.)
 						if (cfg.seeThroughStyle == SeeThroughStyle.SKIN) {
 							cfg.seeThroughStyle = SeeThroughStyle.SILHOUETTE;
 						}

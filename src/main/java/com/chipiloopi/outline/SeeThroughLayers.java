@@ -26,6 +26,29 @@ import java.util.concurrent.ConcurrentHashMap;
  * uniform colour are indistinguishable, so there is nothing left to sort. It is
  * also what the reference this mod is modelled on actually shows — the occluded
  * body reads as a filled shape, not a skin.
+ *
+ * <h2>Why both pipelines define NO_OVERLAY</h2>
+ *
+ * ENTITY_EMISSIVE_SNIPPET declares one sampler, Sampler0. It does not declare
+ * Sampler1 and does not define NO_OVERLAY, but core/entity.vsh still compiles
+ * the overlay path in that state and runs
+ * {@code overlayColor = texelFetch(Sampler1, UV1, 0)} against a sampler nothing
+ * ever assigns. core/entity.fsh then applies
+ * {@code color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a)}, and with
+ * an alpha of zero that mix returns the overlay's colour rather than the
+ * fragment's — black, for every fragment, whatever the tint or the light.
+ *
+ * <p>That is what made occluded players render as solid black shapes, and it is
+ * why the textured style looked completely dark as well: both pipelines are
+ * built from the same snippet, so both inherited it. Vanilla never hits this,
+ * because its one ENTITY_EMISSIVE_SNIPPET pipeline, ENTITY_TRANSLUCENT_EMISSIVE,
+ * adds {@code withSampler("Sampler1")}, and every other entity pipeline either
+ * declares that sampler or defines NO_OVERLAY.
+ *
+ * <p>NO_OVERLAY is the right side of that choice here. The overlay carries the
+ * red damage flash and the white spawn flash, which have no business tinting a
+ * see-through marker, and dropping it avoids binding a texture neither pipeline
+ * has any use for.
  */
 public final class SeeThroughLayers {
 	/** 2x2 opaque white, so the tint alone decides the colour. */
@@ -51,6 +74,8 @@ public final class SeeThroughLayers {
 			// Skips the directional shading that would otherwise darken faces by
 			// up to ~60% and break the flat fill this depends on.
 			.withShaderDefine("NO_CARDINAL_LIGHTING")
+			// Not optional: without it the fill renders black. See the class notes.
+			.withShaderDefine("NO_OVERLAY")
 			.build();
 
 	private static final RenderLayer LAYER = RenderLayer.of(
@@ -85,10 +110,14 @@ public final class SeeThroughLayers {
 			.withDepthWrite(false)
 			.withCull(true)
 			// Discards the transparent texels of the outer skin layer, which would
-			// otherwise be written as opaque black over the whole body.
+			// otherwise be drawn as solid colour over the whole body. (The black
+			// this was once blamed for was the missing NO_OVERLAY below; the
+			// cutout is still needed, for the hat and jacket layers.)
 			.withShaderDefine("ALPHA_CUTOUT", 0.1F)
 			.withBlend(BlendFunction.TRANSLUCENT)
 			.withShaderDefine("NO_CARDINAL_LIGHTING")
+			// Not optional: without it the skin renders black. See the class notes.
+			.withShaderDefine("NO_OVERLAY")
 			.build();
 
 	private static final Map<Identifier, RenderLayer> SKIN_CACHE = new ConcurrentHashMap<>();
