@@ -1,5 +1,6 @@
 {
     "targets": {
+        "mask": {},
         "sharp": {},
         "core_tmp": {},
         "core": {},
@@ -9,11 +10,22 @@
     "passes": [
         {
             "vertex_shader": "minecraft:core/screenquad",
-            "fragment_shader": "outline:post/outline_edge",
+            "fragment_shader": "outline:post/outline_copy",
             "inputs": [
                 {
                     "sampler_name": "In",
                     "target": "minecraft:entity_outline"
+                }
+            ],
+            "output": "mask"
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_edge",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "mask"
                 }
             ],
             "output": "sharp"
@@ -82,7 +94,7 @@
             "inputs": [
                 {
                     "sampler_name": "In",
-                    "target": "sharp",
+                    "target": "mask",
                     "bilinear": true
                 }
             ],
@@ -100,7 +112,7 @@
                     {
                         "name": "Radius",
                         "type": "float",
-                        "value": 16.0
+                        "value": 40.0
                     }
                 ]
             }
@@ -129,7 +141,7 @@
                     {
                         "name": "Radius",
                         "type": "float",
-                        "value": 16.0
+                        "value": 40.0
                     }
                 ]
             }
@@ -148,7 +160,7 @@
                 },
                 {
                     "sampler_name": "Mask",
-                    "target": "minecraft:entity_outline"
+                    "target": "mask"
                 }
             ],
             "output": "minecraft:entity_outline"

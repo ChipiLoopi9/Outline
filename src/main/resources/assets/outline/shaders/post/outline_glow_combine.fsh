@@ -23,10 +23,24 @@ out vec4 fragColor;
 // purpose: the halo's job is to make the silhouette pop out of the terrain, and
 // the moment it approaches opaque it stops being a glow and starts being a
 // sticker that hides the player inside it.
-const float GLOW_STRENGTH = 0.95;
+const float GLOW_STRENGTH = 1.30;
 // Shapes how fast the halo fades with distance from the silhouette. Above 1.0
-// gives a steady decay; below 1.0 flattens it toward a uniform band.
-const float GLOW_GAMMA = 1.20;
+// gives a steady decay; below 1.0 carries more of the halo out to its full
+// width. Safe to sit under 1.0 here only because the halo comes from a blurred
+// solid, whose profile outside the body is already a clean monotonic falloff --
+// lifting it stretches the gradient rather than flattening it into a band.
+const float GLOW_GAMMA = 0.80;
+// How far the halo's colour is pushed toward the pure form of its own hue.
+//
+// A glow is light, not paint. The fill colour is deliberately dark so the
+// occluded body reads as a solid shape, but spreading that same dark violet
+// over sunlit dirt just darkens it -- the halo lands as a smudge or a shadow
+// instead of something glowing. Normalising toward the brightest form of the
+// configured hue keeps the colour the user asked for and lets it read as light
+// against bright terrain. Only the halo is lifted; the core line stays exactly
+// as configured, so the colour setting still governs what the outline looks
+// like.
+const float GLOW_LIFT = 0.55;
 // How solid the core line is. The line carries the shape information, so it is
 // pushed all the way to opaque.
 const float CORE_STRENGTH = 1.0;
@@ -40,19 +54,30 @@ void main() {
     vec4 glow = texture(GlowSampler, texCoord);
 
     float coreAlpha = clamp(core.a * CORE_STRENGTH, 0.0, 1.0);
+    // Gamma before strength, not after. Shaping the raw falloff and then
+    // scaling it keeps STRENGTH a plain brightness knob; doing it the other way
+    // round makes the two constants fight, because gamma pulls anything under
+    // 1.0 back down by an amount that depends on how far strength pushed it up.
     float glowAlpha = clamp(pow(clamp(glow.a, 0.0, 1.0), GLOW_GAMMA) * GLOW_STRENGTH, 0.0, 1.0);
 
-    // Confine the halo to the outside of the silhouette. A blur spreads inward
-    // as well as outward, so on a distant player -- whose on-screen half-width
-    // is smaller than the blur radius -- the two sides bleed past each other and
-    // sum, filling the body into a solid lozenge with no readable shape. That is
-    // what forced the radius down to the point where the glow vanished. Masking
-    // by the silhouette makes the interior unfillable at any radius, so the halo
-    // can be as wide as it needs to be for the near-range look.
+    // Confine the halo to the outside of the silhouette. The halo is a blur of
+    // the filled body, so inside the body it sits near fully opaque -- without
+    // this the effect would paint over the player rather than surround them.
+    // It also keeps the width honest at range: a blur spreads inward as well as
+    // outward, so on a distant player, whose on-screen half-width is smaller
+    // than the radius, the two sides would otherwise bleed past each other and
+    // sum into a solid lozenge with no readable shape.
     glowAlpha *= 1.0 - clamp(texture(MaskSampler, texCoord).a, 0.0, 1.0);
 
     vec3 coreColor = mix(core.rgb, vec3(1.0), CORE_WHITEN);
-    vec3 glowColor = glow.rgb;
+
+    // Brightest form of the halo's own hue: scale the channels up until the
+    // largest hits 1.0. This is a value change only, so a violet stays violet
+    // and a red stays red -- unlike the renormalisation an earlier version
+    // applied to the whole output, which forced every configured colour to full
+    // intensity and made the setting meaningless.
+    float peak = max(glow.r, max(glow.g, glow.b));
+    vec3 glowColor = peak > 0.0001 ? mix(glow.rgb, glow.rgb / peak, GLOW_LIFT) : glow.rgb;
 
     // Proper "over": core on top of halo. Mixing the colours by coreAlpha while
     // taking max() of the alphas is not the same operator — wherever the halo is

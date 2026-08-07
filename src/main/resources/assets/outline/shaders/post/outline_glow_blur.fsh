@@ -1,13 +1,25 @@
 #version 330
 
-// Wide separable Gaussian blur that turns the outline edge into a soft rim of
-// light around the silhouette. Vanilla's entity_outline_box_blur declares a
-// Radius uniform but then shadows it with a hardcoded `float radius = 2.0`,
-// which is why the vanilla glow can never be wider than two pixels. This one
-// actually honours the uniform.
+// Wide separable Gaussian that turns the silhouette into a soft rim of light.
 //
-// Only the halo uses this shader; the crisp line is built by outline_core_blur,
-// which needs the opposite gain. See the comment there.
+// The input is the filled silhouette, not the one-pixel edge the crisp line is
+// built from. Blurring a solid area puts alpha ~0.5 on its own boundary and
+// decays smoothly outward over sigma, which is the halo shape wanted here and
+// costs nothing to produce. Blurring a one-pixel line instead spreads a total
+// alpha of 1 across the whole kernel, leaving a peak near 1/(sigma*sqrt(2pi))
+// -- about 0.05 at these widths -- so it had to be multiplied back up, and the
+// wider the halo the harder it was pushed. That is what kept the glow stuck at
+// roughly ten pixels: past that, the gain needed to make it visible also
+// clamped the near half to a flat opaque band.
+//
+// It also fixes the distance behaviour for free. A blurred solid scales with
+// the shape, so a player twenty blocks away -- a few pixels tall -- spreads
+// very little alpha and keeps a tight glow, instead of being swallowed by a
+// halo sized in screen pixels.
+//
+// Vanilla's entity_outline_box_blur declares a Radius uniform and then shadows
+// it with a hardcoded `float radius = 2.0`, which is why the vanilla glow can
+// never be wider than two pixels. This one honours the uniform.
 
 layout(std140) uniform SamplerInfo {
     vec2 OutSize;
@@ -25,15 +37,13 @@ in vec2 texCoord;
 
 out vec4 fragColor;
 
-// The halo is light, not paint: it has to stay translucent even at its
-// brightest so terrain still reads through it. sqrt(radius) per pass undoes the
-// kernel's spreading of a one-pixel edge; GAIN then deliberately undershoots so
-// the profile stays a gradient instead of clamping into an opaque plateau with
-// a hard outer edge.
-const float GAIN = 0.5;
+// Trims the halo's overall level. A blurred solid already carries its own
+// strength, so unlike the core blur this needs no width-dependent correction --
+// the value is a straight scale and 1.0 means "as the Gaussian left it".
+const float GAIN = 1.0;
 
 void main() {
-    vec2 sampleStep = (1.0 / InSize) * BlurDir;
+    vec2 texelStep = (1.0 / InSize) * BlurDir;
 
     float radius = max(Radius, 1.0);
 
@@ -45,13 +55,20 @@ void main() {
     float sigma = max(radius / 3.0, 0.5);
     float twoSigmaSq = 2.0 * sigma * sigma;
 
+    // One tap per pixel across a halo this wide is a fullscreen cost paid for
+    // detail the kernel cannot represent: at sigma 12 the profile barely moves
+    // between neighbouring pixels. Striding keeps the tap count flat as the
+    // radius grows, and the input is sampled bilinearly so each tap is an
+    // average over the pixels it steps past rather than a point sample.
+    float stride = max(floor(radius / 10.0), 1.0);
+
     vec3 colorSum = vec3(0.0);
     float alphaSum = 0.0;
     float weightSum = 0.0;
 
-    for (float i = -radius; i <= radius; i += 1.0) {
+    for (float i = -radius; i <= radius; i += stride) {
         float weight = exp(-(i * i) / twoSigmaSq);
-        vec4 texel = texture(InSampler, texCoord + sampleStep * i);
+        vec4 texel = texture(InSampler, texCoord + texelStep * i);
 
         // Weight colour by alpha so fully transparent texels cannot bleed
         // black into the halo.
@@ -61,7 +78,7 @@ void main() {
     }
 
     vec3 color = alphaSum > 0.0001 ? colorSum / alphaSum : vec3(0.0);
-    float alpha = clamp((alphaSum / weightSum) * sqrt(radius) * GAIN, 0.0, 1.0);
+    float alpha = clamp((alphaSum / weightSum) * GAIN, 0.0, 1.0);
 
     fragColor = vec4(color, alpha);
 }
