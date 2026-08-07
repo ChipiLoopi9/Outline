@@ -37,7 +37,7 @@ public class OutlineConfig {
 	 * file keeps pinning the color to a previous default and no amount of
 	 * changing {@link #DEFAULT_COLOR} would ever reach an existing install.
 	 */
-	static final int CURRENT_VERSION = 3;
+	static final int CURRENT_VERSION = 4;
 
 	/**
 	 * Deep purple. The look being matched is a violet glow from the reference
@@ -63,7 +63,7 @@ public class OutlineConfig {
 	/** Draw the entity's skin through walls, not just its outline. */
 	public boolean renderThroughWalls = true;
 	/** Whether occluded entities show their skin or a flat fill. */
-	public SeeThroughStyle seeThroughStyle = SeeThroughStyle.SKIN;
+	public SeeThroughStyle seeThroughStyle = SeeThroughStyle.SILHOUETTE;
 	public Targets targets = Targets.PLAYERS;
 
 	private transient int cachedRgb = -1;
@@ -141,6 +141,12 @@ public class OutlineConfig {
 						cfg.targets = Targets.PLAYERS;
 					}
 					if (cfg.configVersion < CURRENT_VERSION) {
+						// SKIN shipped as the default in exactly one build and renders
+						// black in practice, so move those configs back rather than
+						// leaving them stuck on a style that does not work.
+						if (cfg.seeThroughStyle == SeeThroughStyle.SKIN) {
+							cfg.seeThroughStyle = SeeThroughStyle.SILHOUETTE;
+						}
 						if (isPreviousDefault(cfg.color)) {
 							OutlineMod.LOGGER.info("Updating outline color {} -> {} (config v{} -> v{})",
 									cfg.color, DEFAULT_COLOR, cfg.configVersion, CURRENT_VERSION);
