@@ -134,8 +134,13 @@ public class OutlineConfig {
 					if (cfg.color == null) {
 						cfg.color = DEFAULT_COLOR;
 					}
+					// A file written before this key existed must land on
+					// SILHOUETTE, not SKIN. SKIN draws the real texture with no
+					// way to sort the model against itself, so the far side of
+					// each box shows through the near side and the body reads
+					// hollow.
 					if (cfg.seeThroughStyle == null) {
-						cfg.seeThroughStyle = SeeThroughStyle.SKIN;
+						cfg.seeThroughStyle = SeeThroughStyle.SILHOUETTE;
 					}
 					if (cfg.targets == null) {
 						cfg.targets = Targets.PLAYERS;
