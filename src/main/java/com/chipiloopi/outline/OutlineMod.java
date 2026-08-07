@@ -46,6 +46,15 @@ public final class OutlineMod {
 		return config.seeThroughStyle == OutlineConfig.SeeThroughStyle.SILHOUETTE;
 	}
 
+	/**
+	 * How far targets keep rendering, in blocks; 0 leaves vanilla's own distance
+	 * in place. Returns 0 while the mod is disabled so nothing renders further
+	 * than it otherwise would.
+	 */
+	public static double getRenderDistanceBlocks() {
+		return config.enabled ? config.renderDistanceBlocks : 0.0;
+	}
+
 	public static boolean isEnabled() {
 		return config.enabled;
 	}

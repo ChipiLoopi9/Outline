@@ -11,9 +11,10 @@
 // brightens, so it renders a dark halo invisible; plain alpha lets any
 // configured colour read as a real aura against bright terrain.
 
-uniform sampler2D InSampler;   // crisp core line
-uniform sampler2D GlowSampler; // soft rim halo
-uniform sampler2D MaskSampler; // raw silhouette, to keep the halo outside it
+uniform sampler2D InSampler;       // crisp core line
+uniform sampler2D GlowSampler;     // soft rim halo, wide
+uniform sampler2D GlowNearSampler; // same halo at a small radius, for distant targets
+uniform sampler2D MaskSampler;     // raw silhouette, to keep the halo outside it
 
 in vec2 texCoord;
 
@@ -51,7 +52,24 @@ const float CORE_WHITEN = 0.3;
 
 void main() {
     vec4 core = texture(InSampler, texCoord);
-    vec4 glow = texture(GlowSampler, texCoord);
+
+    // Two halo widths, and whichever is stronger here wins.
+    //
+    // A blurred solid only reaches ~0.5 alpha on its boundary while the shape is
+    // wide compared to the kernel. Once it is not -- a player far enough away to
+    // be a few pixels across -- the blur spreads what little alpha there is over
+    // the whole radius and the glow thins out to nothing. That is why the glow
+    // faded with distance while the outline stayed put.
+    //
+    // The narrow blur is still saturated at those sizes, so it carries the far
+    // field. On a nearby player it is fully contained inside the wide halo and
+    // max() discards it, which is what keeps the close-up look untouched.
+    vec4 glowWide = texture(GlowSampler, texCoord);
+    vec4 glowNear = texture(GlowNearSampler, texCoord);
+    // Pick, don't average: both carry the same colour where they carry anything,
+    // but the weaker one trends to rgb 0 as its alpha vanishes, so mixing would
+    // drag the halo toward black exactly where it is already faintest.
+    vec4 glow = glowNear.a > glowWide.a ? glowNear : glowWide;
 
     float coreAlpha = clamp(core.a * CORE_STRENGTH, 0.0, 1.0);
     // Gamma before strength, not after. Shaping the raw falloff and then

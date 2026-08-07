@@ -5,7 +5,9 @@
         "core_tmp": {},
         "core": {},
         "glow_h": {},
-        "glow_v": {}
+        "glow_v": {},
+        "glow_n_h": {},
+        "glow_n_v": {}
     },
     "passes": [
         {
@@ -148,6 +150,64 @@
         },
         {
             "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_glow_blur",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "mask",
+                    "bilinear": true
+                }
+            ],
+            "output": "glow_n_h",
+            "uniforms": {
+                "BlurConfig": [
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            1.0,
+                            0.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 10.0
+                    }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
+            "fragment_shader": "outline:post/outline_glow_blur",
+            "inputs": [
+                {
+                    "sampler_name": "In",
+                    "target": "glow_n_h",
+                    "bilinear": true
+                }
+            ],
+            "output": "glow_n_v",
+            "uniforms": {
+                "BlurConfig": [
+                    {
+                        "name": "BlurDir",
+                        "type": "vec2",
+                        "value": [
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "name": "Radius",
+                        "type": "float",
+                        "value": 10.0
+                    }
+                ]
+            }
+        },
+        {
+            "vertex_shader": "minecraft:core/screenquad",
             "fragment_shader": "outline:post/outline_glow_combine",
             "inputs": [
                 {
@@ -157,6 +217,10 @@
                 {
                     "sampler_name": "Glow",
                     "target": "glow_v"
+                },
+                {
+                    "sampler_name": "GlowNear",
+                    "target": "glow_n_v"
                 },
                 {
                     "sampler_name": "Mask",

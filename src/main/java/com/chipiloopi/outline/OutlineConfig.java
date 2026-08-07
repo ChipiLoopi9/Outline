@@ -65,6 +65,16 @@ public class OutlineConfig {
 	/** Whether occluded entities show their skin or a flat fill. */
 	public SeeThroughStyle seeThroughStyle = SeeThroughStyle.SILHOUETTE;
 	public Targets targets = Targets.PLAYERS;
+	/**
+	 * How far, in blocks, targets keep rendering. Vanilla gives up at about 64,
+	 * taking the outline and its glow with it. Set to 0 to leave vanilla's
+	 * distance alone.
+	 *
+	 * <p>This is a ceiling, not a promise: the server decides which entities the
+	 * client is told about at all, and its tracking range is usually 48 to 64
+	 * blocks. Past that there is nothing to draw no matter what this says.
+	 */
+	public double renderDistanceBlocks = 256.0;
 
 	private transient int cachedRgb = -1;
 
